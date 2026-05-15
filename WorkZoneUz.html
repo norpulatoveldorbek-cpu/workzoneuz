@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>WorkZoneUZ – Xavfsiz frilans platforma | MVP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'neon-cyan': '#00f0ff',
+            'neon-pink': '#ff00ea',
+            'dark-bg': '#0a0a0f',
+            'card-bg': 'rgba(20,20,35,0.7)',
+          },
+          fontFamily: {
+            'sans': ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0a0a0f; font-family: 'Inter', system-ui, sans-serif; margin: 0; color: #e0e0ff; }
+    .glass-card { background: rgba(20, 20, 35, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1rem; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); transition: all 0.3s ease; }
+    .glass-card:hover { border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 8px 40px rgba(0, 240, 255, 0.15); }
+    .neon-text { text-shadow: 0 0 12px currentColor; }
+    .gradient-text { background: linear-gradient(135deg, #00f0ff, #ff00ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-bg { background: radial-gradient(circle at 30% 50%, rgba(0,240,255,0.1) 0%, transparent 60%), radial-gradient(circle at 70% 20%, rgba(255,0,234,0.08) 0%, transparent 55%), #0a0a0f; }
+    .search-input:focus { outline: none; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); }
+    .category-pill { transition: 0.2s; }
+    .category-pill:hover { background: rgba(0, 240, 255, 0.15); border-color: #00f0ff; color: #00f0ff; }
+    .star-rating { color: #fbbf24; }
+    .avatar { border: 2px solid #00f0ff; }
+    .how-card { background: rgba(255,255,255,0.03); border-left: 3px solid #00f0ff; }
+    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); justify-content: center; align-items: center; }
+    .modal.active { display: flex; }
+    .chat-panel { position: fixed; right: -100%; top: 0; width: 100%; max-width: 400px; height: 100vh; background: rgba(10,10,20,0.95); backdrop-filter: blur(20px); border-left: 1px solid rgba(255,255,255,0.1); transition: right 0.3s ease; z-index: 90; display: flex; flex-direction: column; }
+    .chat-panel.open { right: 0; }
+    .tab-active { background: rgba(0, 240, 255, 0.2) !important; border-color: #00f0ff !important; color: #00f0ff !important; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="fixed w-full z-50 bg-dark-bg/80 backdrop-blur-md border-b border-white/5">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2 text-2xl font-bold">
+      <span class="text-neon-cyan neon-text">⚡</span>
+      <span class="text-white">WorkZone</span><span class="gradient-text">UZ</span>
+    </div>
+    <div id="authButtons" class="flex gap-3">
+      <button id="loginBtn" class="px-5 py-2 rounded-lg border border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10 transition text-sm font-semibold">Kirish</button>
+      <button id="registerBtn" class="px-5 py-2 rounded-lg bg-gradient-to-r from-neon-cyan to-blue-500 text-black font-semibold text-sm hover:shadow-lg transition">Ro'yxatdan o'tish</button>
+    </div>
+    <div id="userMenu" class="hidden items-center gap-4">
+      <button id="chatToggleBtn" class="text-neon-cyan text-sm flex items-center gap-1 hover:underline">💬 Chat</button>
+      <div class="flex items-center gap-2">
+        <img id="userAvatar" src="" class="w-8 h-8 rounded-full avatar">
+        <span id="userNameDisplay" class="text-white text-sm font-medium"></span>
+        <button id="logoutBtn" class="text-gray-400 hover:text-red-400 text-sm">Chiqish</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Register Modal -->
+<div id="registerModal" class="modal">
+  <div class="glass-card p-8 w-full max-w-md mx-4">
+    <h2 class="text-2xl font-bold mb-6 text-white">Ro'yxatdan o'tish</h2>
+    <div class="space-y-4">
+      <input id="regName" type="text" placeholder="To'liq ism" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-cyan">
+      <input id="regEmail" type="email" placeholder="Email" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-cyan">
+      <input id="regPassword" type="password" placeholder="Parol" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-cyan">
+      <select id="regRole" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-neon-cyan">
+        <option value="client">Ish beruvchi (Mijoz)</option>
+        <option value="freelancer">Ishchi (Frilanser)</option>
+      </select>
+      <button id="submitRegister" class="w-full py-3 rounded-lg bg-gradient-to-r from-neon-cyan to-blue-500 text-black font-semibold">Ro'yxatdan o'tish</button>
+      <p class="text-gray-400 text-sm text-center">Hisobingiz bormi? <span id="toLoginFromReg" class="text-neon-cyan cursor-pointer hover:underline">Kirish</span></p>
+    </div>
+    <button class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl modal-close">&times;</button>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
+  <div class="glass-card p-8 w-full max-w-md mx-4">
+    <h2 class="text-2xl font-bold mb-6 text-white">Kirish</h2>
+    <div class="space-y-4">
+      <input id="loginEmail" type="email" placeholder="Email" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-cyan">
+      <input id="loginPassword" type="password" placeholder="Parol" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-cyan">
+      <button id="submitLogin" class="w-full py-3 rounded-lg bg-gradient-to-r from-neon-cyan to-blue-500 text-black font-semibold">Kirish</button>
+      <p class="text-gray-400 text-sm text-center">Akkauntingiz yo'qmi? <span id="toRegFromLogin" class="text-neon-cyan cursor-pointer hover:underline">Ro'yxatdan o'tish</span></p>
+    </div>
+    <button class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl modal-close">&times;</button>
+  </div>
+</div>
+
+<!-- Job Post Modal (for clients) -->
+<div id="jobModal" class="modal">
+  <div class="glass-card p-8 w-full max-w-md mx-4">
+    <h2 class="text-2xl font-bold mb-6 text-white">Yangi buyurtma joylashtirish</h2>
+    <div class="space-y-4">
+      <input id="jobTitle" type="text" placeholder="Buyurtma nomi" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-cyan">
+      <textarea id="jobDesc" rows="3" placeholder="Tavsif" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-cyan"></textarea>
+      <input id="jobBudget" type="number" placeholder="Byudjet ($)" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-cyan">
+      <select id="jobCategory" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-neon-cyan">
+        <option value="">Kategoriya tanlang</option>
+        <option>Logo Design</option><option>AI Video</option><option>Animation</option>
+        <option>Video Editing</option><option>Web Development</option><option>Telegram Bot</option><option>SMM</option>
+      </select>
+      <button id="submitJob" class="w-full py-3 rounded-lg bg-gradient-to-r from-neon-cyan to-blue-500 text-black font-semibold">Joylashtirish</button>
+    </div>
+    <button class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl modal-close">&times;</button>
+  </div>
+</div>
+
+<!-- Chat Panel -->
+<div id="chatPanel" class="chat-panel">
+  <div class="p-4 border-b border-white/10 flex justify-between items-center">
+    <div>
+      <h3 class="font-bold text-white" id="chatPartnerName">Xabarlar</h3>
+      <p class="text-xs text-gray-400" id="chatOrderInfo"></p>
+    </div>
+    <button id="closeChat" class="text-gray-400 hover:text-white text-xl">&times;</button>
+  </div>
+  <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatMessages"></div>
+  <div class="p-4 border-t border-white/10">
+    <div class="flex gap-2">
+      <input id="chatInput" type="text" placeholder="Xabar yozing..." class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-neon-cyan">
+      <button id="sendChatMsg" class="px-4 py-2 bg-neon-cyan text-black rounded-lg font-semibold">Yuborish</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content Wrapper -->
+<div id="mainContent">
+  <!-- Default view (before role-specific load) -->
+</div>
+
+<!-- Escrow explanation (always visible) -->
+<section class="max-w-7xl mx-auto px-4 py-20 border-t border-white/5">
+  <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">Xavfsiz <span class="gradient-text">Escrow</span> Tizimi</h2>
+  <div class="grid md:grid-cols-3 gap-8">
+    <div class="glass-card p-8 how-card"><div class="text-4xl mb-4">1️⃣</div><h3 class="text-xl font-semibold mb-3">Buyurtma bering</h3><p class="text-gray-400">Frilanser xizmatini tanlang va talablarni yuboring.</p></div>
+    <div class="glass-card p-8 how-card"><div class="text-4xl mb-4">2️⃣</div><h3 class="text-xl font-semibold mb-3">Pulni eskrouga qo‘ying</h3><p class="text-gray-400">To‘lov platforma hisobida muzlatiladi, ijro kafolatlanadi.</p></div>
+    <div class="glass-card p-8 how-card"><div class="text-4xl mb-4">3️⃣</div><h3 class="text-xl font-semibold mb-3">Ishni tasdiqlang</h3><p class="text-gray-400">Natijadan qoniqsangiz, pul frilanserga o‘tadi. Aks holda qayta ko‘rib chiqish.</p></div>
+  </div>
+</section>
+
+<footer class="border-t border-white/5 py-10 text-center text-gray-500 text-sm">
+  <p>© 2026 WorkZoneUZ. Barcha huquqlar himoyalangan. Mock Escrow tizimi asosida MVP</p>
+</footer>
+
+<script>
+  // ---------- DATA ----------
+  const freelancers = [
+    { id:1,name:"Dilshod Karimov",title:"Senior Logo Designer",category:"Logo Design",rating:4.9,completed:132,price:150,avatar:"https://ui-avatars.com/api/?name=Dilshod+Karimov&background=00f0ff&color=000&size=56"},
+    { id:2,name:"Madina Umarova",title:"AI Video Creator",category:"AI Video",rating:4.8,completed:89,price:200,avatar:"https://ui-avatars.com/api/?name=Madina+Umarova&background=ff00ea&color=fff&size=56"},
+    { id:3,name:"Jasur Rahimov",title:"Motion Designer",category:"Animation",rating:4.7,completed:64,price:180,avatar:"https://ui-avatars.com/api/?name=Jasur+Rahimov&background=7c3aed&color=fff&size=56"},
+    { id:4,name:"Nilufar Yusupova",title:"Video Editor",category:"Video Editing",rating:4.9,completed:215,price:120,avatar:"https://ui-avatars.com/api/?name=Nilufar+Yusupova&background=db2777&color=fff&size=56"},
+    { id:5,name:"Akbar Toshmatov",title:"Full-Stack Developer",category:"Web Development",rating:5.0,completed:97,price:300,avatar:"https://ui-avatars.com/api/?name=Akbar+Toshmatov&background=2563eb&color=fff&size=56"},
+    { id:6,name:"Shahnoza Alimova",title:"Telegram Bot Developer",category:"Telegram Bot",rating:4.6,completed:42,price:250,avatar:"https://ui-avatars.com/api/?name=Shahnoza+Alimova&background=059669&color=fff&size=56"},
+    { id:7,name:"Bobur Mirzaev",title:"SMM Strategist",category:"SMM",rating:4.8,completed:78,price:170,avatar:"https://ui-avatars.com/api/?name=Bobur+Mirzaev&background=ea580c&color=fff&size=56"},
+    { id:8,name:"Zarina Nizomova",title:"Brand Identity Designer",category:"Logo Design",rating:4.9,completed:156,price:190,avatar:"https://ui-avatars.com/api/?name=Zarina+Nizomova&background=4f46e5&color=fff&size=56"},
+    { id:9,name:"Oybek Xolmirzaev",title:"3D Animator",category:"Animation",rating:4.8,completed:53,price:220,avatar:"https://ui-avatars.com/api/?name=Oybek+Xolmirzaev&background=9333ea&color=fff&size=56"},
+    { id:10,name:"Kamola Abdullaeva",title:"YouTube Video Editor",category:"Video Editing",rating:4.7,completed:188,price:110,avatar:"https://ui-avatars.com/api/?name=Kamola+Abdullaeva&background=ec4899&color=fff&size=56"},
+    { id:11,name:"Sherzod Nurmatov",title:"AI Video Animator",category:"AI Video",rating:4.9,completed:71,price:230,avatar:"https://ui-avatars.com/api/?name=Sherzod+Nurmatov&background=06b6d4&color=fff&size=56"},
+    { id:12,name:"Lola Ismoilova",title:"Frontend Developer",category:"Web Development",rating:4.6,completed:64,price:280,avatar:"https://ui-avatars.com/api/?name=Lola+Ismoilova&background=8b5cf6&color=fff&size=56"},
+    { id:13,name:"Rustam Gafurov",title:"Chatbot & Automation",category:"Telegram Bot",rating:4.5,completed:29,price:200,avatar:"https://ui-avatars.com/api/?name=Rustam+Gafurov&background=10b981&color=fff&size=56"},
+    { id:14,name:"Dildora Qodirova",title:"Social Media Manager",category:"SMM",rating:4.9,completed:102,price:140,avatar:"https://ui-avatars.com/api/?name=Dildora+Qodirova&background=f97316&color=fff&size=56"},
+    { id:15,name:"Azizbek Sultonov",title:"Graphic Designer",category:"Logo Design",rating:4.7,completed:83,price:160,avatar:"https://ui-avatars.com/api/?name=Azizbek+Sultonov&background=3b82f6&color=fff&size=56"}
+  ];
+
+  // Companies and their job postings
+  const companies = [
+    { id: 'c1', name: 'TechSoft MChJ', avatar: 'https://ui-avatars.com/api/?name=TechSoft&background=1e3a8a&color=fff&size=40' },
+    { id: 'c2', name: 'ArtHouse Studio', avatar: 'https://ui-avatars.com/api/?name=ArtHouse&background=7e22ce&color=fff&size=40' },
+    { id: 'c3', name: 'Digital Marketing Pro', avatar: 'https://ui-avatars.com/api/?name=Digital+Pro&background=ea580c&color=fff&size=40' },
+    { id: 'c4', name: 'Qurilish Lux', avatar: 'https://ui-avatars.com/api/?name=Qurilish+Lux&background=065f46&color=fff&size=40' }
+  ];
+
+  let jobListings = [
+    { id: 'j1', companyId: 'c1', title: 'Logo brend uchun', description: 'Yangi startap uchun zamonaviy logo kerak. Minimalist usulda.', budget: 200, category: 'Logo Design', companyName: 'TechSoft MChJ', companyAvatar: companies[0].avatar },
+    { id: 'j2', companyId: 'c2', title: 'Animatsion video rolik', description: 'Mahsulot reklamasi uchun 30 soniyali 2D animatsiya.', budget: 450, category: 'Animation', companyName: 'ArtHouse Studio', companyAvatar: companies[1].avatar },
+    { id: 'j3', companyId: 'c3', title: 'SMM reklama kampaniyasi', description: 'Instagram va Telegram uchun target reklama yuritish.', budget: 300, category: 'SMM', companyName: 'Digital Marketing Pro', companyAvatar: companies[2].avatar },
+    { id: 'j4', companyId: 'c1', title: 'Veb-sayt tayyorlash', description: 'Korporativ sayt, 5 sahifali, mobil moslashuvchan.', budget: 800, category: 'Web Development', companyName: 'TechSoft MChJ', companyAvatar: companies[0].avatar },
+    { id: 'j5', companyId: 'c4', title: 'Telegram bot avtomatlashtirish', description: 'Buyurtmalarni qabul qiluvchi aqlli bot.', budget: 350, category: 'Telegram Bot', companyName: 'Qurilish Lux', companyAvatar: companies[3].avatar },
+    { id: 'j6', companyId: 'c2', title: 'YouTube kanal uchun video montaj', description: 'Haftasiga 2 ta video montaj qilish kerak.', budget: 150, category: 'Video Editing', companyName: 'ArtHouse Studio', companyAvatar: companies[1].avatar }
+  ];
+
+  // Chat messages per order
+  let messagesByOrder = {
+    'j1': [
+      { sender: 'system', text: 'Siz ushbu buyurtmaga qiziqish bildirdingiz. TechSoft MChJ bilan muloqotdasiz.' }
+    ],
+    'j2': [
+      { sender: 'system', text: 'Siz ushbu buyurtmaga qiziqish bildirdingiz. ArtHouse Studio bilan muloqotdasiz.' }
+    ],
+    'j3': [
+      { sender: 'system', text: 'Siz ushbu buyurtmaga qiziqish bildirdingiz. Digital Marketing Pro bilan muloqotdasiz.' }
+    ],
+    'j4': [
+      { sender: 'system', text: 'Siz ushbu buyurtmaga qiziqish bildirdingiz. TechSoft MChJ bilan muloqotdasiz.' }
+    ],
+    'j5': [
+      { sender: 'system', text: 'Siz ushbu buyurtmaga qiziqish bildirdingiz. Qurilish Lux bilan muloqotdasiz.' }
+    ],
+    'j6': [
+      { sender: 'system', text: 'Siz ushbu buyurtmaga qiziqish bildirdingiz. ArtHouse Studio bilan muloqotdasiz.' }
+    ]
+  };
+
+  let activeChat = null; // { orderId, companyName }
+
+  // ---------- AUTH ----------
+  const USERS_KEY = 'workzoneuz_users';
+  const SESSION_KEY = 'workzoneuz_session';
+
+  function getUsers() { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); }
+  function saveUsers(users) { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+  function getSession() { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
+  function saveSession(user) { localStorage.setItem(SESSION_KEY, JSON.stringify(user)); }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); }
+
+  let currentUser = getSession();
+
+  // UI Elements
+  const authButtons = document.getElementById('authButtons');
+  const userMenu = document.getElementById('userMenu');
+  const loginBtn = document.getElementById('loginBtn');
+  const registerBtn = document.getElementById('registerBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const chatToggleBtn = document.getElementById('chatToggleBtn');
+  const closeChat = document.getElementById('closeChat');
+  const chatPanel = document.getElementById('chatPanel');
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput = document.getElementById('chatInput');
+  const sendChatMsg = document.getElementById('sendChatMsg');
+  const userAvatar = document.getElementById('userAvatar');
+  const userNameDisplay = document.getElementById('userNameDisplay');
+  const chatPartnerName = document.getElementById('chatPartnerName');
+  const chatOrderInfo = document.getElementById('chatOrderInfo');
+  const mainContent = document.getElementById('mainContent');
+
+  // Modal controls
+  function openModal(modal) { modal.classList.add('active'); }
+  function closeAllModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
+
+  function updateUIForAuth() {
+    if (currentUser) {
+      authButtons.classList.add('hidden');
+      userMenu.classList.remove('hidden');
+      userMenu.classList.add('flex');
+      userNameDisplay.textContent = currentUser.full_name;
+      userAvatar.src = currentUser.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.full_name)}&background=00f0ff&color=000&size=32`;
+    } else {
+      authButtons.classList.remove('hidden');
+      userMenu.classList.add('hidden');
+      userMenu.classList.remove('flex');
+    }
+    renderMainContent();
+  }
+
+  function login(email, password) {
+    const users = getUsers();
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+      currentUser = user;
+      saveSession(user);
+      updateUIForAuth();
+      closeAllModals();
+      return true;
+    }
+    return false;
+  }
+
+  function register(name, email, password, role) {
+    const users = getUsers();
+    if (users.find(u => u.email === email)) {
+      alert('Bu email allaqachon ro\'yxatdan o\'tgan!');
+      return false;
+    }
+    const newUser = { id: Date.now().toString(), full_name: name, email, password, role, avatar_url: '' };
+    users.push(newUser);
+    saveUsers(users);
+    currentUser = newUser;
+    saveSession(newUser);
+    updateUIForAuth();
+    closeAllModals();
+    return true;
+  }
+
+  function logout() {
+    currentUser = null;
+    clearSession();
+    updateUIForAuth();
+    chatPanel.classList.remove('open');
+  }
+
+  // Auth listeners
+  loginBtn.addEventListener('click', () => openModal(loginModal));
+  registerBtn.addEventListener('click', () => openModal(registerModal));
+  toRegFromLogin.addEventListener('click', () => { closeAllModals(); openModal(registerModal); });
+  toLoginFromReg.addEventListener('click', () => { closeAllModals(); openModal(loginModal); });
+  document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', closeAllModals));
+  window.addEventListener('click', (e) => { if (e.target.classList.contains('modal')) closeAllModals(); });
+
+  submitLogin.addEventListener('click', () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    if (!email || !password) return alert('Email va parolni kiriting');
+    if (login(email, password)) {
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
+    } else {
+      alert('Email yoki parol noto\'g\'ri');
+    }
+  });
+
+  submitRegister.addEventListener('click', () => {
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value.trim();
+    const role = document.getElementById('regRole').value;
+    if (!name || !email || !password) return alert('Barcha maydonlarni to\'ldiring');
+    if (register(name, email, password, role)) {
+      document.getElementById('regName').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regPassword').value = '';
+    }
+  });
+
+  logoutBtn.addEventListener('click', logout);
+
+  // Job posting (client)
+  document.getElementById('submitJob').addEventListener('click', () => {
+    const title = document.getElementById('jobTitle').value.trim();
+    const desc = document.getElementById('jobDesc').value.trim();
+    const budget = parseFloat(document.getElementById('jobBudget').value);
+    const category = document.getElementById('jobCategory').value;
+    if (!title || !desc || !budget || !category) return alert('Barcha maydonlarni to\'ldiring');
+    const newJob = {
+      id: 'j' + Date.now(),
+      companyId: currentUser.id,
+      title, description: desc, budget, category,
+      companyName: currentUser.full_name,
+      companyAvatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.full_name)}&background=0f172a&color=fff&size=40`
+    };
+    jobListings.unshift(newJob);
+    messagesByOrder[newJob.id] = [{ sender: 'system', text: `Buyurtma yaratildi. Mijoz: ${currentUser.full_name}` }];
+    closeAllModals();
+    renderMainContent();
+    document.getElementById('jobTitle').value = '';
+    document.getElementById('jobDesc').value = '';
+    document.getElementById('jobBudget').value = '';
+    document.getElementById('jobCategory').value = '';
+  });
+
+  // Chat logic
+  function openChatForOrder(orderId, companyName, orderTitle) {
+    activeChat = { orderId, companyName };
+    chatPartnerName.textContent = companyName;
+    chatOrderInfo.textContent = 'Buyurtma: ' + orderTitle;
+    renderChatMessages();
+    chatPanel.classList.add('open');
+  }
+
+  function renderChatMessages() {
+    if (!activeChat) return;
+    const msgs = messagesByOrder[activeChat.orderId] || [];
+    chatMessages.innerHTML = msgs.map(m => {
+      const isMine = (currentUser && m.sender !== 'system' && m.sender !== activeChat.companyName);
+      return `<div class="flex ${isMine ? 'justify-end' : 'justify-start'}">
+        <div class="max-w-[80%] px-4 py-2 rounded-xl text-sm ${isMine ? 'bg-neon-cyan/20 text-white' : 'bg-white/5 text-gray-200'}">
+          <div class="text-xs text-gray-400 mb-1">${m.sender === 'system' ? 'Tizim' : m.sender}</div>
+          ${m.text}
+        </div>
+      </div>`;
+    }).join('');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function sendMessage() {
+    if (!activeChat || !currentUser) return;
+    const text = chatInput.value.trim();
+    if (!text) return;
+    const orderId = activeChat.orderId;
+    if (!messagesByOrder[orderId]) messagesByOrder[orderId] = [];
+    messagesByOrder[orderId].push({ sender: currentUser.full_name, text });
+    chatInput.value = '';
+    renderChatMessages();
+  }
+
+  sendChatMsg.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+  closeChat.addEventListener('click', () => chatPanel.classList.remove('open'));
+  chatToggleBtn.addEventListener('click', () => {
+    if (!currentUser) return alert('Iltimos, avval tizimga kiring');
+    if (!activeChat) return alert('Biror buyurtma bo\'yicha suhbatni oching');
+    chatPanel.classList.add('open');
+    renderChatMessages();
+  });
+
+  // ---------- MAIN CONTENT RENDERING ----------
+  function renderMainContent() {
+    if (!currentUser) {
+      // Default: show freelancer search
+      mainContent.innerHTML = `
+        <section class="hero-bg pt-32 pb-28 px-4">
+          <div class="max-w-6xl mx-auto text-center">
+            <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+              <span class="text-white">Mukammal</span><br>
+              <span class="gradient-text neon-text">Frilanserni</span> <span class="text-white">toping</span>
+            </h1>
+            <p class="text-lg text-gray-300 max-w-2xl mx-auto mb-10">WorkZoneUZ – O‘zbekistonning eng xavfsiz frilans platformasi. Escrow to‘lov tizimi bilan.</p>
+            <div class="max-w-2xl mx-auto glass-card p-2 flex items-center gap-2">
+              <svg class="w-5 h-5 text-gray-400 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <input id="searchInput" type="text" placeholder="Qidirish: ism, kasb yoki kategoriya..." class="search-input flex-1 bg-transparent border-none text-white placeholder-gray-500 py-3 px-2 text-base">
+              <button id="searchBtn" class="bg-gradient-to-r from-neon-cyan to-blue-500 px-6 py-3 rounded-xl font-semibold text-black hover:brightness-110 transition whitespace-nowrap">Qidirish</button>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 mt-10" id="categoryContainer">
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer flex items-center gap-2 tab-active" data-category="all"><span>🌟</span> Barchasi</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer flex items-center gap-2" data-category="Logo Design"><span>🎨</span> Logo Dizayn</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer flex items-center gap-2" data-category="AI Video"><span>🤖</span> AI Video</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer flex items-center gap-2" data-category="Animation"><span>✨</span> Animatsiya</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer flex items-center gap-2" data-category="Video Editing"><span>🎬</span> Video Montaj</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer flex items-center gap-2" data-category="Web Development"><span>💻</span> Veb Dasturlash</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer flex items-center gap-2" data-category="Telegram Bot"><span>📱</span> Telegram Bot</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer flex items-center gap-2" data-category="SMM"><span>📈</span> SMM Marketing</div>
+            </div>
+          </div>
+        </section>
+        <section class="max-w-7xl mx-auto px-4 py-20">
+          <div class="flex justify-between items-end mb-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-white">Top <span class="gradient-text">Frilanserlar</span></h2>
+            <span id="resultCount" class="text-gray-400 text-sm"></span>
+          </div>
+          <div id="freelancerGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+      `;
+      // Rebind freelancer search
+      bindFreelancerSearch();
+      renderFreelancers('all', '');
+    } else if (currentUser.role === 'freelancer') {
+      // Freelancer sees job listings
+      mainContent.innerHTML = `
+        <section class="pt-28 pb-12 px-4">
+          <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">Mavjud <span class="gradient-text">Buyurtmalar</span></h1>
+            <p class="text-gray-400 mb-8">Kompaniyalar tomonidan joylashtirilgan zakazlar</p>
+            <div class="flex flex-wrap gap-3 mb-8" id="jobCategoryFilter">
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer tab-active" data-category="all">Barchasi</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Logo Design">🎨 Logo</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="AI Video">🤖 AI Video</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Animation">✨ Animatsiya</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Video Editing">🎬 Video</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Web Development">💻 Veb</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Telegram Bot">📱 Bot</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="SMM">📈 SMM</div>
+            </div>
+            <input id="jobSearch" type="text" placeholder="Buyurtma izlash..." class="w-full max-w-md glass-card px-4 py-3 mb-6 text-white bg-transparent focus:outline-none focus:border-neon-cyan">
+            <div id="jobListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+          </div>
+        </section>
+      `;
+      bindJobFilters();
+      renderJobList('all', '');
+    } else if (currentUser.role === 'client') {
+      // Client sees freelancer search + post job button
+      mainContent.innerHTML = `
+        <section class="hero-bg pt-32 pb-10 px-4">
+          <div class="max-w-6xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4"><span class="gradient-text">Frilanser</span> toping</h1>
+            <p class="text-gray-300 mb-6">O'z loyihangiz uchun eng yaxshi mutaxassisni yollang</p>
+            <div class="flex justify-center gap-4 mb-8">
+              <button id="postJobBtn" class="px-6 py-3 bg-neon-pink/20 border border-neon-pink text-neon-pink rounded-xl font-semibold hover:bg-neon-pink/30 transition">+ Yangi buyurtma joylashtirish</button>
+            </div>
+            <div class="max-w-2xl mx-auto glass-card p-2 flex items-center gap-2">
+              <svg class="w-5 h-5 text-gray-400 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <input id="searchInput" type="text" placeholder="Frilanser qidirish..." class="search-input flex-1 bg-transparent border-none text-white placeholder-gray-500 py-3 px-2 text-base">
+              <button id="searchBtn" class="bg-gradient-to-r from-neon-cyan to-blue-500 px-6 py-3 rounded-xl font-semibold text-black hover:brightness-110 transition whitespace-nowrap">Qidirish</button>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 mt-8" id="categoryContainer">
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer tab-active" data-category="all"><span>🌟</span> Barchasi</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Logo Design"><span>🎨</span> Logo</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="AI Video"><span>🤖</span> AI Video</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Animation"><span>✨</span> Animatsiya</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Video Editing"><span>🎬</span> Video</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Web Development"><span>💻</span> Veb</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="Telegram Bot"><span>📱</span> Bot</div>
+              <div class="category-pill glass-card px-5 py-2.5 text-sm font-medium cursor-pointer" data-category="SMM"><span>📈</span> SMM</div>
+            </div>
+          </div>
+        </section>
+        <section class="max-w-7xl mx-auto px-4 py-20">
+          <h2 class="text-3xl font-bold mb-8">Frilanserlar</h2>
+          <div id="freelancerGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+      `;
+      document.getElementById('postJobBtn').addEventListener('click', () => openModal(jobModal));
+      bindFreelancerSearch();
+      renderFreelancers('all', '');
+    }
+  }
+
+  // Freelancer search helpers
+  let currentFreelancerCategory = 'all';
+  function bindFreelancerSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const categoryContainer = document.getElementById('categoryContainer');
+    if (categoryContainer) {
+      categoryContainer.addEventListener('click', (e) => {
+        const pill = e.target.closest('.category-pill');
+        if (!pill) return;
+        currentFreelancerCategory = pill.dataset.category;
+        document.querySelectorAll('#categoryContainer .category-pill').forEach(p => {
+          p.classList.remove('tab-active');
+          p.style.background = 'rgba(20,20,35,0.6)'; p.style.borderColor = 'rgba(255,255,255,0.08)'; p.style.color = '#e0e0ff';
+        });
+        pill.classList.add('tab-active');
+        pill.style.background = 'rgba(0,240,255,0.2)'; pill.style.borderColor = '#00f0ff'; pill.style.color = '#00f0ff';
+        renderFreelancers(currentFreelancerCategory, searchInput?.value || '');
+      });
+    }
+    if (searchBtn) searchBtn.addEventListener('click', () => renderFreelancers(currentFreelancerCategory, searchInput?.value || ''));
+    if (searchInput) searchInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') renderFreelancers(currentFreelancerCategory, e.target.value); });
+  }
+
+  function renderFreelancers(filter, searchTerm) {
+    const grid = document.getElementById('freelancerGrid');
+    if (!grid) return;
+    let filtered = freelancers;
+    if (filter !== 'all') filtered = filtered.filter(f => f.category === filter);
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(f => f.name.toLowerCase().includes(term) || f.title.toLowerCase().includes(term) || f.category.toLowerCase().includes(term));
+    }
+    const countSpan = document.getElementById('resultCount');
+    if (countSpan) countSpan.textContent = `${filtered.length} ta natija`;
+    grid.innerHTML = filtered.length === 0 ? '<div class="col-span-full text-center py-20 text-gray-500">Hech narsa topilmadi</div>' :
+      filtered.map(f => `
+        <div class="glass-card p-6 flex flex-col">
+          <div class="flex items-center gap-4 mb-4">
+            <img src="${f.avatar}" class="avatar w-14 h-14 rounded-full">
+            <div><h3 class="font-semibold text-lg">${f.name}</h3><p class="text-gray-400 text-sm">${f.title}</p></div>
+          </div>
+          <div class="flex items-center gap-1 mb-3"><span class="star-rating">★</span>${f.rating}<span class="text-gray-500 text-xs ml-2">(${f.completed} ish)</span></div>
+          <div class="mt-auto flex justify-between items-center pt-3 border-t border-white/5">
+            <span class="text-neon-cyan font-bold text-lg">$${f.price}</span>
+            <button class="text-xs bg-neon-cyan/10 text-neon-cyan px-3 py-1.5 rounded-full">Buyurtma berish</button>
+          </div>
+        </div>`).join('');
+  }
+
+  // Job list helpers
+  let currentJobCategory = 'all';
+  function bindJobFilters() {
+    const jobCategoryContainer = document.getElementById('jobCategoryFilter');
+    const jobSearch = document.getElementById('jobSearch');
+    if (jobCategoryContainer) {
+      jobCategoryContainer.addEventListener('click', (e) => {
+        const pill = e.target.closest('.category-pill');
+        if (!pill) return;
+        currentJobCategory = pill.dataset.category;
+        document.querySelectorAll('#jobCategoryFilter .category-pill').forEach(p => {
+          p.classList.remove('tab-active');
+          p.style.background = 'rgba(20,20,35,0.6)'; p.style.borderColor = 'rgba(255,255,255,0.08)'; p.style.color = '#e0e0ff';
+        });
+        pill.classList.add('tab-active');
+        pill.style.background = 'rgba(0,240,255,0.2)'; pill.style.borderColor = '#00f0ff'; pill.style.color = '#00f0ff';
+        renderJobList(currentJobCategory, jobSearch?.value || '');
+      });
+    }
+    if (jobSearch) jobSearch.addEventListener('input', (e) => renderJobList(currentJobCategory, e.target.value));
+  }
+
+  function renderJobList(filterCategory, searchTerm) {
+    const container = document.getElementById('jobListContainer');
+    if (!container) return;
+    let filtered = jobListings;
+    if (filterCategory !== 'all') filtered = filtered.filter(j => j.category === filterCategory);
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(j => j.title.toLowerCase().includes(term) || j.companyName.toLowerCase().includes(term) || j.category.toLowerCase().includes(term));
+    }
+    container.innerHTML = filtered.length === 0 ? '<div class="col-span-full text-center py-20 text-gray-500">Buyurtma topilmadi</div>' :
+      filtered.map(j => `
+        <div class="glass-card p-6 flex flex-col">
+          <div class="flex items-center gap-3 mb-3">
+            <img src="${j.companyAvatar}" class="w-10 h-10 rounded-full avatar">
+            <span class="text-sm text-gray-400">${j.companyName}</span>
+          </div>
+          <h3 class="font-semibold text-lg mb-1">${j.title}</h3>
+          <p class="text-gray-400 text-sm mb-3 line-clamp-2">${j.description}</p>
+          <div class="flex justify-between items-center mt-auto pt-3 border-t border-white/5">
+            <span class="text-neon-cyan font-bold">$${j.budget}</span>
+            <button class="bg-neon-cyan/10 text-neon-cyan px-4 py-1.5 rounded-full text-sm hover:bg-neon-cyan/20 transition" data-order-id="${j.id}" data-company="${j.companyName}" data-title="${j.title}">Murojaat qilish</button>
+          </div>
+        </div>`).join('');
+    // Attach chat openers
+    container.querySelectorAll('button[data-order-id]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const orderId = btn.dataset.orderId;
+        const company = btn.dataset.company;
+        const title = btn.dataset.title;
+        openChatForOrder(orderId, company, title);
+      });
+    });
+  }
+
+  // Initialize
+  updateUIForAuth();
+</script>
+</body>
+</html>
